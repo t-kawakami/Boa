@@ -14,3 +14,17 @@ for index in range(4):
 
 fiveToTen = range(5, 10)
 print(fiveToTen)
+print(list(fiveToTen))
+
+array = ['Mary', 'had', 'a', 'little', 'lamb']
+for index in range(len(array)):
+    print(index, array[index])
+
+def loopTest():
+    for index in range(5, 10):
+        for count in range(4):
+            if index == 7:
+                break
+            print(index, count)
+
+loopTest()
