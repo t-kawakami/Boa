@@ -1,11 +1,11 @@
 __author__ = 'kawakami_note'
-import urllib.request
+import urllib
 import csv
 
 def download(url, title):
-    urllib.request.urlretrieve(url, title)
+    urllib.urlretrieve(url, title)
 
-file = open("data/input.csv", "r", encoding="UTF-8")
+file = open("data/input.csv", "r")
 lines = csv.reader(file, delimiter=",")
 
 for line in lines:
