@@ -25,9 +25,22 @@ def hist_mono():
 
 def hist_multi():
     x = np.random.randint(25, 50, (25, 2))
-    y = np.random.randint(60, 85, (20, 2))
+    y = np.random.randint(60, 85, (25, 2))
     z = np.vstack((x, y))
-    print(z)
+    z = np.float32(z)
+
+    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
+    ret, label, center = cv2.kmeans(z, 2, None, criteria, 10, cv2.KMEANS_RANDOM_CENTERS)
+
+    a = z[label.ravel() == 0]
+    b = z[label.ravel() == 1]
+
+    plt.scatter(a[:, 0], a[:, 1])
+    plt.scatter(b[:, 0], b[:, 1])
+    plt.scatter(center[:, 0], center[:, 1], s=80, c='y', marker='s')
+    plt.xlabel('Height')
+    plt.ylabel('Weight')
+    plt.show()
 
 if __name__ == '__main__':
     hist_multi()
