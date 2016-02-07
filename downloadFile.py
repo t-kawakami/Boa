@@ -18,7 +18,7 @@ def main(from_index):
             continue
         file_name = "data/images/" + str(index).zfill(10) + ".jpg"
         print('processing:' + file_name)
-        download(line[0], file_name)
+        # download(line[0], file_name)
         # TODO 余計に改行が入ってしまう。
         writer = csv.writer(mapping_file, delimiter=',',quotechar='|')
         writer.writerow([file_name, line[1]])
