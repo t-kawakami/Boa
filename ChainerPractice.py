@@ -46,3 +46,34 @@ y.grad = np.ones((2,2),dtype=np.float32)
 y.backward()
 print(f.W.grad)
 print(f.b.grad)
+
+
+class MyChain(Chain):
+    def __init__(self):
+        super(MyChain, self).__init__(
+            l1=L.Linear(4, 3),
+            l2=L.Linear(3, 2),
+        )
+
+    def __call__(self, x):
+        h = self.l1(x)
+        return self.l2(h)
+
+class MyChain2(ChainList):
+    def __init__(self):
+        super(MyChain2, self).__init__(
+            L.Linear(4, 3),
+            L.Linear(3, 2),
+        )
+
+    def __call__(self, x):
+        h = self[0](x)
+        return self[1](h)
+
+x = Variable(np.array([[1,2,3,4],[5,6,7,8]], dtype=np.float32))
+model = MyChain()
+optimizer = optimizers.SGD()
+optimizer.setup(model)
+
+model.zerograds()
+optimizer.update()
