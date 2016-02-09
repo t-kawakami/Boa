@@ -21,7 +21,7 @@ def create_hist(all_key_points, centers):
                 index += 1
             hist[min_index] += 1
         hists[key] = hist
-    return hists
+    return sorted(hists)
 
 def create_cluster(key_points_all):
     # 特徴点をKMean法でクラスタ化
@@ -38,7 +38,8 @@ def extract_key_points(img_path):
         key_points.append(img_detect.pt)
     return np.array(key_points)
 
-def create_img_tag_map(img_tags):
+# 全画像のタグを集計し、各タグを0, 1の配列に変換する
+def create_tag_map(img_tags):
     img_tag_list = []
     for img_tag in img_tags:
         tags = img_tags[img_tag].split(' ')
@@ -46,12 +47,23 @@ def create_img_tag_map(img_tags):
             img_tag_list.append(tag)
     img_tag_set = list(set(img_tag_list))
 
-    img_tag_map = {}
+    tag_map = {}
     for index in range(0, len(img_tag_set)):
         bi_array = np.array(np.zeros(len(img_tag_set)))
         bi_array.put(index, 1.0)
-        img_tag_map[img_tag_set[index]] = bi_array
-    return img_tag_map
+        tag_map[img_tag_set[index]] = bi_array
+    return tag_map
+
+# 各画像とタグ(0, 1の配列)とのマッピングを作る。複数のタグが紐づいているので、配列は縦に結合する
+def create_img_tag_map(img_tags, tag_map):
+    img_tag_map = {}
+    for img_tag in img_tags:
+        tags = img_tags[img_tag].split(' ')
+        bi_array = np.array(np.zeros(len(tag_map)))
+        for tag in tags:
+            bi_array = np.add(bi_array, tag_map[tag])
+        img_tag_map[img_tag] = bi_array
+    return sorted(img_tag_map)
 
 def main():
     # 画像のデータファイル読み込み
@@ -66,14 +78,16 @@ def main():
         img_tags[line[0]] = line[1]
         key_points_all = np.vstack((key_points_all, key_points[line[0]]))
     # 各タグを0, 1に変換する
-    img_tag_map = create_img_tag_map(img_tags)
+    tag_map = create_tag_map(img_tags)
+    img_tag_map = create_img_tag_map(img_tags, tag_map)
     for img_tag in img_tag_map:
-        print(img_tag, ':', img_tag_map[img_tag])
+        print(img_tag, img_tag_map[img_tag])
 
     # 各特徴点をクラスタ化し、各クラスタの中心点を得る
     centers = create_cluster(np.float32(key_points_all))
     hists = create_hist(key_points, centers)
-    print(hists)
+    for hist in hists:
+        print(hist, hists[hist])
 
 if __name__ == '__main__':
     main()
