@@ -38,11 +38,25 @@ def extract_key_points(img_path):
         key_points.append(img_detect.pt)
     return np.array(key_points)
 
+def create_img_tag_map(img_tags):
+    img_tag_list = []
+    for img_tag in img_tags:
+        tags = img_tags[img_tag].split(' ')
+        for tag in tags:
+            img_tag_list.append(tag)
+    img_tag_set = list(set(img_tag_list))
+
+    img_tag_map = {}
+    for index in range(0, len(img_tag_set)):
+        bi_array = np.array(np.zeros(len(img_tag_set)))
+        bi_array.put(index, 1.0)
+        img_tag_map[img_tag_set[index]] = bi_array
+    return img_tag_map
+
 def main():
     # 画像のデータファイル読み込み
     mapping_file = open('data/mapping.csv', 'r')
     reader = csv.reader(mapping_file)
-    index = 0
     # 特徴点とタグを取得
     key_points = {}
     img_tags = {}
@@ -51,6 +65,11 @@ def main():
         key_points[line[0]] = extract_key_points(line[0])
         img_tags[line[0]] = line[1]
         key_points_all = np.vstack((key_points_all, key_points[line[0]]))
+    # 各タグを0, 1に変換する
+    img_tag_map = create_img_tag_map(img_tags)
+    for img_tag in img_tag_map:
+        print(img_tag, ':', img_tag_map[img_tag])
+
     # 各特徴点をクラスタ化し、各クラスタの中心点を得る
     centers = create_cluster(np.float32(key_points_all))
     hists = create_hist(key_points, centers)
