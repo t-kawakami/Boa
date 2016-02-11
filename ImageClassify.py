@@ -4,6 +4,34 @@ __author__ = 'kawakami'
 import numpy as np
 import csv
 import cv2
+import chainer.links as L
+import chainer.functions as F
+from chainer import Chain, optimizers, Variable
+
+class Model(Chain):
+
+    def __init__(self, input_num, unit_num, output_num):
+        super(Model, self).__init__(
+            l1=L.Linear(input_num, unit_num),
+            l2=L.Linear(unit_num, unit_num),
+            l3=L.Linear(unit_num, output_num)
+        )
+
+    def __call__(self, x):
+        h1 = F.relu(self.l1(x))
+        h2 = F.relu(self.l2(h1))
+        y = self.l3(h2)
+        return y
+
+class Classifier(Chain):
+    def __init__(self, predictor):
+        super(Classifier, self).__init__(predictor=predictor)
+
+    def __call__(self, x, t):
+        y = self.predictor(x)
+        self.loss = F.softmax_corss_entropy(y, t)
+        self.accuracy = F.accuracy(y, t)
+        return self.loss
 
 def create_hist(all_key_points, centers):
     hists = {}
@@ -21,7 +49,7 @@ def create_hist(all_key_points, centers):
                 index += 1
             hist[min_index] += 1
         hists[key] = hist
-    return sorted(hists)
+    return hists
 
 def create_cluster(key_points_all):
     # 特徴点をKMean法でクラスタ化
@@ -63,7 +91,21 @@ def create_img_tag_map(img_tags, tag_map):
         for tag in tags:
             bi_array = np.add(bi_array, tag_map[tag])
         img_tag_map[img_tag] = bi_array
-    return sorted(img_tag_map)
+    return img_tag_map
+
+def power(img_tag_map):
+    img_value_list = []
+    for img_tag in img_tag_map:
+        img_value = 0
+        index = 0
+        for bi_value in img_tag_map[img_tag]:
+            value = 0
+            if bi_value == 1:
+                value = 2 ** index
+            index += 1
+            img_value += value
+        img_value_list.append(img_value)
+    return img_value_list
 
 def main():
     # 画像のデータファイル読み込み
@@ -80,14 +122,43 @@ def main():
     # 各タグを0, 1に変換する
     tag_map = create_tag_map(img_tags)
     img_tag_map = create_img_tag_map(img_tags, tag_map)
-    for img_tag in img_tag_map:
-        print(img_tag, img_tag_map[img_tag])
 
     # 各特徴点をクラスタ化し、各クラスタの中心点を得る
     centers = create_cluster(np.float32(key_points_all))
     hists = create_hist(key_points, centers)
-    for hist in hists:
-        print(hist, hists[hist])
+
+    # データセットを取得する
+    x_all = np.float32(hists.values())
+    target = power(img_tag_map)
+    y_all = np.int32(target)
+
+    data_size = int(len(x_all[0]) / 2)
+    x_train, x_test = np.split(x_all, [data_size])
+    y_train, y_test = np.split(y_all, [data_size])
+
+    model = L.Classifier(Model(input_num=15,unit_num=20,output_num=max(target)))
+    optimizer = optimizers.SGD()
+    optimizer.setup(model)
+
+    batch_size = 10
+    for epoch in range(20):
+        print('epoch %d' % epoch)
+        indexes = np.random.permutation(data_size)
+        for index in range(0, data_size, batch_size):
+            x = Variable(x_train[indexes[index : index + batch_size]])
+            t = Variable(y_train[indexes[index : index + batch_size]])
+            optimizer.update(model, x, t)
+
+    sum_loss, sum_accuracy = 0, 0
+    for index in range(0, 15, batch_size):
+        x = Variable(x_test[index : index + batch_size])
+        t = Variable(y_test[index : index + batch_size])
+        print(index + batch_size)
+        print(x_test[index : index + batch_size])
+        print(y_test[index : index + batch_size])
+        loss = model(x, t)
+        sum_loss += loss.data * batch_size
+        sum_accuracy += model.accuracy.data * batch_size
 
 if __name__ == '__main__':
     main()

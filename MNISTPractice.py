@@ -46,12 +46,15 @@ optimizer.setup(model)
 
 batch_size = 100
 data_size = 60000
-for epoch in range(20):
+for epoch in range(5):
     print('epoch %d' % epoch)
     indexes = np.random.permutation(data_size)
     for index in range(0, data_size, batch_size):
         x = Variable(x_train[indexes[index : index + batch_size]])
         t = Variable(y_train[indexes[index : index + batch_size]])
+        print(index + batch_size)
+        print(x_train[indexes[index : index + batch_size]])
+        print(y_train[indexes[index : index + batch_size]])
         optimizer.update(model, x, t)
 
 sum_loss, sum_accuracy = 0, 0
