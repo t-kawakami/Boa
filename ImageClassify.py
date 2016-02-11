@@ -136,7 +136,7 @@ def main():
     x_train, x_test = np.split(x_all, [data_size])
     y_train, y_test = np.split(y_all, [data_size])
 
-    model = L.Classifier(Model(input_num=15,unit_num=20,output_num=max(target)))
+    model = L.Classifier(Model(input_num=15,unit_num=20,output_num=(max(target) + 1)))
     optimizer = optimizers.SGD()
     optimizer.setup(model)
 
@@ -150,15 +150,14 @@ def main():
             optimizer.update(model, x, t)
 
     sum_loss, sum_accuracy = 0, 0
-    for index in range(0, 15, batch_size):
+    for index in range(0, 10, batch_size):
         x = Variable(x_test[index : index + batch_size])
         t = Variable(y_test[index : index + batch_size])
-        print(index + batch_size)
-        print(x_test[index : index + batch_size])
-        print(y_test[index : index + batch_size])
         loss = model(x, t)
         sum_loss += loss.data * batch_size
         sum_accuracy += model.accuracy.data * batch_size
+    print(sum_loss)
+    print(sum_accuracy)
 
 if __name__ == '__main__':
     main()
