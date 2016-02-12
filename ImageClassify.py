@@ -29,7 +29,6 @@ class Classifier(Chain):
 
     def __call__(self, x, t):
         y = self.predictor(x)
-        self.loss = F.softmax_corss_entropy(y, t)
         self.accuracy = F.accuracy(y, t)
         return self.loss
 
@@ -93,20 +92,6 @@ def create_img_tag_map(img_tags, tag_map):
         img_tag_map[img_tag] = bi_array
     return img_tag_map
 
-def power(img_tag_map):
-    img_value_list = []
-    for img_tag in img_tag_map:
-        img_value = 0
-        index = 0
-        for bi_value in img_tag_map[img_tag]:
-            value = 0
-            if bi_value == 1:
-                value = 2 ** index
-            index += 1
-            img_value += value
-        img_value_list.append(img_value)
-    return img_value_list
-
 def main():
     # 画像のデータファイル読み込み
     mapping_file = open('data/mapping.csv', 'r')
@@ -128,15 +113,14 @@ def main():
     hists = create_hist(key_points, centers)
 
     # データセットを取得する
-    x_all = np.float32(hists.values())
-    target = power(img_tag_map)
-    y_all = np.int32(target)
+    x_all = np.array(hists.values()).astype(np.float32)
+    y_all = np.array(img_tag_map).astype(np.float32)
 
     data_size = int(len(x_all[0]) / 2)
     x_train, x_test = np.split(x_all, [data_size])
     y_train, y_test = np.split(y_all, [data_size])
 
-    model = L.Classifier(Model(input_num=15,unit_num=20,output_num=(max(target) + 1)))
+    model = Classifier(Model(input_num=15,unit_num=20,output_num=len(y_all[0])))
     optimizer = optimizers.SGD()
     optimizer.setup(model)
 
