@@ -29,7 +29,7 @@ class Classifier(Chain):
 
     def __call__(self, x, t):
         y = self.predictor(x)
-        self.accuracy = F.accuracy(y, t)
+        self.loss = F.mean_squared_error(y, t)
         return self.loss
 
 def create_hist(all_key_points, centers):
@@ -114,7 +114,7 @@ def main():
 
     # データセットを取得する
     x_all = np.array(hists.values()).astype(np.float32)
-    y_all = np.array(img_tag_map).astype(np.float32)
+    y_all = np.array(img_tag_map.values()).astype(np.float32)
 
     data_size = int(len(x_all[0]) / 2)
     x_train, x_test = np.split(x_all, [data_size])
@@ -125,6 +125,8 @@ def main():
     optimizer.setup(model)
 
     batch_size = 10
+    sum_loss_train = 0
+    sum_loss_test = 0
     for epoch in range(20):
         print('epoch %d' % epoch)
         indexes = np.random.permutation(data_size)
@@ -132,16 +134,16 @@ def main():
             x = Variable(x_train[indexes[index : index + batch_size]])
             t = Variable(y_train[indexes[index : index + batch_size]])
             optimizer.update(model, x, t)
+            loss = model(x, t)
+            sum_loss_train += loss.data * batch_size
+            print('train loss : ', sum_loss_train)
 
-    sum_loss, sum_accuracy = 0, 0
-    for index in range(0, 10, batch_size):
-        x = Variable(x_test[index : index + batch_size])
-        t = Variable(y_test[index : index + batch_size])
-        loss = model(x, t)
-        sum_loss += loss.data * batch_size
-        sum_accuracy += model.accuracy.data * batch_size
-    print(sum_loss)
-    print(sum_accuracy)
+        for index in range(0, 10, batch_size):
+            x = Variable(x_test[index : index + batch_size])
+            t = Variable(y_test[index : index + batch_size])
+            loss = model(x, t)
+            sum_loss_test += loss.data * batch_size
+            print('test loss : ', sum_loss_test)
 
 if __name__ == '__main__':
     main()
