@@ -6,8 +6,8 @@ import pandas
 from bs4 import BeautifulSoup
 import os
 
-def get_stock(code, date, download=False):
-    main_table = get_main_table(code, date, download)
+def get_stock(code, name, date, download=False):
+    main_table = get_main_table(code, name, date, download)
     # 日時、始値、高値、安値、終値、出来高、売買代金を取得する
     # tr_list = main_table.tbody.find_all('tr')
     # date_time_list = [tr.find_all('td')[0].text for tr in tr_list]
@@ -19,13 +19,13 @@ def get_stock(code, date, download=False):
     # total_value_list = [tr.find_all('td')[6].text for tr in tr_list]
 
 # データを読み込む
-def get_main_table(code, date, download=False):
+def get_main_table(code, name, date, download=False):
     if download:
         url = 'http://k-db.com/stocks/%s-T/5min' % code
         html = urllib.urlopen(url).read()
         if not os.path.exists('data/%s' % date):
             os.mkdir('data/%s' % date)
-        write_file = open('data/%s/%s.txt' % (date, code), 'w')
+        write_file = open('data/%s/%s_%s.txt' % (date, code, name), 'w')
         soup = BeautifulSoup(html, 'lxml')
         main_table = soup.find(id='maintable')
         print(main_table)
@@ -33,15 +33,16 @@ def get_main_table(code, date, download=False):
         write_file.close()
         return main_table
     else:
-        main_table = BeautifulSoup(open('data/%s/%s.txt' % (date, code), 'r'), 'lxml')
+        main_table = BeautifulSoup(open('data/%s/%s_%s.txt' % (date, code, name), 'r'), 'lxml')
         print(main_table)
         return main_table
 
 def main():
-    all_data = pandas.read_csv('data/all_2016-02-22.csv')
-    code_list = all_data['コード']
-    for code in code_list:
-        get_stock(code, '2016-02-22', download=False)
+    all_data = pandas.read_csv('data/all_2016-02-22.csv', encoding='utf-8')
+    code_list = all_data[u'コード']
+    name_list = all_data[u'銘柄名']
+    for code, name in zip(code_list, name_list):
+        get_stock(code, name, '2016-02-22', download=True)
 
 if __name__ == '__main__':
     main()
