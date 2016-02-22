@@ -33,14 +33,15 @@ def get_main_table(code, date, download=False):
         write_file.close()
         return main_table
     else:
-        main_table = BeautifulSoup(open('data/%s/%s.txt' % date, code, 'r'), 'lxml')
+        main_table = BeautifulSoup(open('data/%s/%s.txt' % (date, code), 'r'), 'lxml')
+        print(main_table)
         return main_table
 
 def main():
     all_data = pandas.read_csv('data/all_2016-02-22.csv')
     code_list = all_data['コード']
     for code in code_list:
-        get_stock(code, '2016-02-22', download=True)
+        get_stock(code, '2016-02-22', download=False)
 
 if __name__ == '__main__':
     main()
