@@ -40,25 +40,26 @@ def get_main_table(code, name, date, download=False):
         write_file = open('data/%s/%s_%s.txt' % (date, code, name), 'w')
         soup = BeautifulSoup(html, 'lxml')
         main_table = soup.find(id='maintable')
-        print(name)
         write_file.write(str(main_table))
         write_file.close()
         return main_table
     else:
         main_table = BeautifulSoup(open('data/%s/%s_%s.txt' % (date, code, name), 'r'), 'lxml')
-        print(name)
         return main_table
 
-def main(skip_num=0):
+def main(from_row=0):
     all_data = pandas.read_csv('data/all_2016-02-22.csv', encoding='utf-8')
     code_list = all_data[u'コード']
     name_list = all_data[u'銘柄名']
-    index = 0
     for index in xrange(0, len(code_list)):
-        if index < skip_num:
+        # ヘッダ行と該当行を除くため2引く
+        if index < (from_row - 2):
             continue
-        get_stock(code_list[index], name_list[index], '2016-02-23', download=True)
+        code = code_list[index]
+        name = name_list[index]
+        print('%s_%s_%s' % (index + 2, code, name))
+        get_stock(code, name, '2016-02-23', download=True)
 
 if __name__ == '__main__':
     sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
-    main(skip_num=166)
+    main(from_row=323)
