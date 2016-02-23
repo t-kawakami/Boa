@@ -5,6 +5,9 @@ import urllib
 import pandas
 from bs4 import BeautifulSoup
 import os
+import sys
+import codecs
+import numpy as np
 
 def get_stock(code, name, date, download=False):
     main_table = get_main_table(code, name, date, download)
@@ -18,6 +21,12 @@ def get_stock(code, name, date, download=False):
     # amount_list = [tr.find_all('td')[5].text for tr in tr_list]
     # total_value_list = [tr.find_all('td')[6].text for tr in tr_list]
 
+# windowサイズ幅で移動平均を計算する
+def calc_move_average(datas, window):
+    datas = np.asarray(datas)
+    tmp = np.ones(window) / window
+    return np.convolve(datas, tmp, 'valid')
+
 # データを読み込む
 def get_main_table(code, name, date, download=False):
     if download:
@@ -28,13 +37,13 @@ def get_main_table(code, name, date, download=False):
         write_file = open('data/%s/%s_%s.txt' % (date, code, name), 'w')
         soup = BeautifulSoup(html, 'lxml')
         main_table = soup.find(id='maintable')
-        print(main_table)
+        print(name)
         write_file.write(str(main_table))
         write_file.close()
         return main_table
     else:
         main_table = BeautifulSoup(open('data/%s/%s_%s.txt' % (date, code, name), 'r'), 'lxml')
-        print(main_table)
+        print(name)
         return main_table
 
 def main():
@@ -42,7 +51,8 @@ def main():
     code_list = all_data[u'コード']
     name_list = all_data[u'銘柄名']
     for code, name in zip(code_list, name_list):
-        get_stock(code, name, '2016-02-22', download=True)
+        get_stock(code, name, '2016-02-23', download=True)
 
 if __name__ == '__main__':
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
     main()
