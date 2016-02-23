@@ -29,6 +29,9 @@ def calc_move_average(datas, window):
 
 # データを読み込む
 def get_main_table(code, name, date, download=False):
+    # 禁則文字を置換する
+    code = code.replace('/', '')
+    name = name.replace('/', '')
     if download:
         url = 'http://k-db.com/stocks/%s-T/5min' % code
         html = urllib.urlopen(url).read()
@@ -46,13 +49,16 @@ def get_main_table(code, name, date, download=False):
         print(name)
         return main_table
 
-def main():
+def main(skip_num=0):
     all_data = pandas.read_csv('data/all_2016-02-22.csv', encoding='utf-8')
     code_list = all_data[u'コード']
     name_list = all_data[u'銘柄名']
-    for code, name in zip(code_list, name_list):
-        get_stock(code, name, '2016-02-23', download=True)
+    index = 0
+    for index in xrange(0, len(code_list)):
+        if index < skip_num:
+            continue
+        get_stock(code_list[index], name_list[index], '2016-02-23', download=True)
 
 if __name__ == '__main__':
     sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
-    main()
+    main(skip_num=166)
