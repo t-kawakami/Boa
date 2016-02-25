@@ -5,30 +5,18 @@ import pandas as pd
 import urllib2
 from bs4 import BeautifulSoup
 
-# サイトのHTMLを取得し、ファイルに出力する。
-def get_html():
-    csv = pd.read_csv('data/scraping.csv')
-    file_names, urls= csv['file'], csv['url']
-    for file_name, url in zip(file_names, urls):
-        write_file = open(file_name, 'w')
-        write_file.write(urllib2.urlopen(url).read())
-
 # img srcを抽出する
 def extract_img_src():
     csv = pd.read_csv('data/scraping.csv')
-    file_names, tags = csv['file'], csv['tag']
-    for file_name, tag in zip(file_names, tags):
-        html_file = open(file_name, 'r')
-        html = ''.join(html_file.readlines())
-        soup = BeautifulSoup(html, 'lxml')
+    urls, tags = csv['url'], csv['tag']
+    img_tag, img_url = [], []
+    for url, tag in zip(urls, tags):
+        soup = BeautifulSoup(urllib2.urlopen(url), 'lxml')
         img_all = soup.find_all('img')
         for img in img_all:
-            print(img['src'])
-
-def main(read_html=True):
-    if read_html:
-        get_html()
-    extract_img_src()
+            img_tag.append(tag)
+            img_url.append(img)
+    pd.DataFrame({"tag":img_tag, "url":img_url}).to_csv("data/tag_url.csv")
 
 if __name__ == '__main__':
-    main(read_html=False)
+    extract_img_src()
