@@ -14,8 +14,10 @@ def extract_img_src():
         soup = BeautifulSoup(urllib2.urlopen(url), 'lxml')
         img_all = soup.find_all('img')
         for img in img_all:
-            img_tag.append(tag)
-            img_url.append(img)
+            img_src = img['src']
+            if img_src.startswith('/image/'):
+                img_tag.append(tag)
+                img_url.append(img_src)
     pd.DataFrame({"tag":img_tag, "url":img_url}).to_csv("data/tag_url.csv")
 
 if __name__ == '__main__':
