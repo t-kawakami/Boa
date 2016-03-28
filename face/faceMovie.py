@@ -1,12 +1,13 @@
 import cv2
 
+#cascade_path = 'data/haarcascades/haarcascade_frontalface_default.xml'
 cascade_path = 'data/haarcascades/cascade.xml'
 
 def detectFace(image):
     image_gray = cv2.cvtColor(image,  cv2.COLOR_BGR2GRAY)
     return cv2.CascadeClassifier(cascade_path).detectMultiScale(image_gray, scaleFactor=1.15, minNeighbors=3, minSize=(50, 50))
 
-video_path = 'data/movie/testdata/2/face.avi'
+video_path = 'data/movie/testdata/8/face.avi'
 cap = cv2.VideoCapture(video_path)
 
 framenum = 0
